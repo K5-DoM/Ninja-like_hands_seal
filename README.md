@@ -8,7 +8,7 @@ pinned: false
 app_file: index.html
 ---
 
-# Naruto Seal Web Demo
+# Ninja-like Seal Web Demo
 
 この Space は静的フロントエンド配信用です。
 
