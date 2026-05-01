@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>Ninja-like Hand Seal — Browser</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body {
+      width: 100vw; height: 100dvh;
+      background: #000; overflow: hidden;
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans JP", sans-serif;
+      color: #fff;
+    }
+
+    #video {
+      position: fixed; inset: 0;
+      width: 100vw; height: 100dvh;
+      object-fit: cover;
+      transform: scaleX(-1);
+      background: #111;
+      z-index: 0;
+    }
+    #chakra {
+      position: fixed; inset: 0;
+      pointer-events: none;
+      z-index: 1;
+    }
+    #effects {
+      position: fixed; inset: 0;
+      pointer-events: none;
+      z-index: 2;
+    }
+    #hud {
+      position: fixed; inset: 0;
+      pointer-events: none;
+      z-index: 3;
+    }
+
+    .controls {
+      position: fixed;
+      bottom: calc(16px + env(safe-area-inset-bottom));
+      left: calc(16px + env(safe-area-inset-left));
+      display: flex; flex-direction: column; gap: 8px;
+      background: rgba(0,0,0,0.55);
+      padding: 12px 14px; border-radius: 12px;
+      z-index: 4;
+      max-width: calc(100vw - 32px);
+    }
+    .controls.is-playing { display: none; }
+    @media (max-aspect-ratio: 3/4) {
+      /* Portrait（縦持ち、スマホ標準） */
+      .controls {
+        left: 50%;
+        transform: translateX(-50%);
+        width: calc(100vw - 24px);
+        max-width: 420px;
+      }
+      .controls__select, .controls__btn {
+        min-width: 0;
+        width: 100%;
+      }
+    }
+    /* TODO(landscape): 横持ちでは画面下に並べるとカメラ映像を圧迫する。
+       将来は左サイドのナロー幅 (max-width:280px) のドロワー型に切り替える。 */
+    @media (min-aspect-ratio: 4/3) and (max-height: 500px) {
+      .controls {
+        bottom: calc(8px + env(safe-area-inset-bottom));
+        padding: 8px 10px;
+      }
+      .controls__select, .controls__btn {
+        padding: 6px 10px;
+        font-size: 13px;
+      }
+    }
+    .controls__select, .controls__btn {
+      font: inherit; padding: 8px 12px; border-radius: 8px;
+      border: 1px solid rgba(255,255,255,0.25);
+      background: rgba(255,255,255,0.10); color: #fff;
+      min-width: 220px; cursor: pointer;
+    }
+    .controls__btn--primary { background: #AAFF5A; color: #0d0d0d; font-weight: 700; border-color: transparent; }
+    .controls__btn--primary:disabled { background: #444; color: #777; cursor: default; }
+    .controls__btn:disabled { opacity: 0.45; cursor: default; }
+    .controls__select { appearance: none; }
+    .controls__select option {
+      background: #1a1a1a;
+      color: #fff;
+    }
+    .controls__select option:disabled {
+      color: #888;
+    }
+
+    #overlay {
+      position: fixed; inset: 0;
+      display: flex; align-items: center; justify-content: center;
+      background: rgba(0,0,0,0.85);
+      z-index: 5;
+      transition: opacity 0.3s ease;
+    }
+    #overlay.hidden { opacity: 0; pointer-events: none; }
+    #overlay__inner {
+      text-align: center;
+      padding: max(24px, env(safe-area-inset-top)) 24px max(24px, env(safe-area-inset-bottom));
+    }
+    #mute {
+      position: fixed;
+      top: calc(12px + env(safe-area-inset-top));
+      right: calc(12px + env(safe-area-inset-right));
+      width: 44px; height: 44px;
+      display: flex; align-items: center; justify-content: center;
+      border: none; border-radius: 50%;
+      background: rgba(0,0,0,0.55); color: #fff;
+      font-size: 20px; cursor: pointer;
+      z-index: 4;
+    }
+    #overlay h1 {
+      font-size: 22px; letter-spacing: 2px;
+      color: #FF6600; text-shadow: 0 0 12px rgba(255,102,0,0.6);
+      margin-bottom: 14px;
+    }
+    #overlay p { font-size: 14px; line-height: 1.6; color: #ddd; margin-bottom: 16px; }
+    #start {
+      padding: 12px 36px; font: inherit; font-weight: 700;
+      background: #AAFF5A; color: #0d0d0d;
+      border: none; border-radius: 8px; cursor: pointer; letter-spacing: 1px;
+    }
+    #start:disabled { background: #444; color: #777; cursor: default; }
+    #overlay__error { color: #FF6E6E; font-size: 13px; margin-top: 12px; min-height: 1.2em; }
+
+    @keyframes uzumaki-spin { to { transform: rotate(360deg); } }
+    .loading-spinner {
+      width: 56px; height: 56px;
+      display: block; margin: 0 auto 14px;
+      border-radius: 50%;
+      border: 4px solid transparent;
+      border-top-color: #fff;
+      border-right-color: rgba(255,255,255,0.6);
+      border-bottom-color: rgba(255,255,255,0.3);
+      animation: uzumaki-spin 0.9s linear infinite;
+    }
+    .loading-text {
+      font-size: 14px; letter-spacing: 2px; color: #fff;
+    }
+    #overlay__loading.hidden { display: none; }
+
+    #flash {
+      position: fixed;
+      top: 38%; left: 50%; transform: translate(-50%, -50%) scale(0.92);
+      z-index: 4;
+      padding: 18px 32px; border-radius: 12px;
+      background: rgba(0,0,0,0.62);
+      color: #FF6E6E;
+      font-size: clamp(28px, 6.5vw, 56px);
+      font-weight: 800; letter-spacing: 2px;
+      text-align: center; white-space: nowrap;
+      text-shadow: 0 0 18px rgba(255,110,110,0.7);
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.18s ease, transform 0.18s ease;
+    }
+    #flash.flash--visible {
+      opacity: 1;
+      transform: translate(-50%, -50%) scale(1);
+    }
+
+    #endless-result {
+      position: fixed; inset: 0;
+      display: flex; align-items: center; justify-content: center;
+      background: rgba(0,0,0,0.78);
+      z-index: 5;
+      padding: max(24px, env(safe-area-inset-top))
+               max(24px, env(safe-area-inset-right))
+               max(24px, env(safe-area-inset-bottom))
+               max(24px, env(safe-area-inset-left));
+    }
+    #endless-result.hidden { display: none; }
+    .result__panel { text-align: center; }
+    .result__title {
+      font-size: 24px; letter-spacing: 4px;
+      color: #FF6E6E;
+      text-shadow: 0 0 12px rgba(255,110,110,0.6);
+      margin-bottom: 12px;
+    }
+    .result__score {
+      font: 700 96px/1 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+      color: #FFD45A;
+      text-shadow: 0 0 24px rgba(255,212,90,0.5);
+      margin-bottom: 4px;
+    }
+    .result__sub { font-size: 16px; color: #ddd; margin-bottom: 28px; }
+    .result__share {
+      display: inline-flex; align-items: center; gap: 10px;
+      padding: 12px 24px; border-radius: 999px;
+      background: #000; color: #fff;
+      font-weight: 700; letter-spacing: 1px;
+      text-decoration: none;
+      border: 1px solid rgba(255,255,255,0.4);
+      min-height: 44px;
+    }
+    .result__share:active { opacity: 0.7; }
+    .result__share-icon {
+      width: 22px; height: 22px;
+      filter: invert(1);  /* 黒い X ロゴ → 白に反転 */
+    }
+    .result__close {
+      position: absolute;
+      top: calc(12px + env(safe-area-inset-top));
+      right: calc(12px + env(safe-area-inset-right));
+      width: 44px; height: 44px;
+      display: flex; align-items: center; justify-content: center;
+      border: none; border-radius: 50%;
+      background: rgba(255,255,255,0.15); color: #fff;
+      font-size: 20px; cursor: pointer;
+    }
+    .result__close:active { background: rgba(255,255,255,0.3); }
+    .result__back {
+      display: inline-block; margin-top: 18px;
+      padding: 10px 20px; border-radius: 8px;
+      background: rgba(255,255,255,0.10); color: #fff;
+      font: inherit; font-weight: 600;
+      border: 1px solid rgba(255,255,255,0.3); cursor: pointer;
+      min-height: 44px;
+    }
+    .result__back:active { background: rgba(255,255,255,0.20); }
+  </style>
+</head>
+<body>
+  <video id="video" autoplay playsinline muted></video>
+  <canvas id="chakra"></canvas>
+  <canvas id="effects"></canvas>
+  <canvas id="hud"></canvas>
+  <div id="controls" class="controls"></div>
+
+  <div id="overlay">
+    <div id="overlay__inner">
+      <h1>HAND SEAL</h1>
+      <p id="overlay__desc">
+        Hand-seal recognition runs entirely in your browser.<br/>
+        No video is uploaded.<br/>
+        <small style="opacity:0.7">Inspired by the NARUTO&trade; series. Unofficial, non-commercial fan project — not affiliated with Shueisha.</small>
+      </p>
+      <button id="start">Start Camera</button>
+      <div id="overlay__loading" class="hidden">
+        <div class="loading-spinner" aria-hidden="true"></div>
+        <div class="loading-text">Now loading...</div>
+      </div>
+      <p id="overlay__error"></p>
+    </div>
+  </div>
+
+  <div id="endless-result" class="hidden">
+    <button id="result-close" class="result__close" type="button" aria-label="Close">✕</button>
+    <div class="result__panel">
+      <div class="result__title">GAME OVER</div>
+      <div class="result__score" id="result-score">0</div>
+      <div class="result__sub" id="result-sub">seals</div>
+      <a id="result-share" class="result__share" target="_blank" rel="noopener" href="#">
+        <img class="result__share-icon" src="/assets/x_icon.webp" alt="" />
+        <span>Share on X</span>
+      </a>
+      <button id="result-back" class="result__back" type="button">Back to menu</button>
+    </div>
+  </div>
+
+  <script type="module" src="/src/main.ts"></script>
+</body>
+</html>
