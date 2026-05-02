@@ -235,7 +235,6 @@ async function run(): Promise<void> {
       syncControls();
     },
     onStart: startSelected,
-    onRetry: startSelected,
   });
 
   function syncControls(): void {
@@ -246,7 +245,6 @@ async function run(): Promise<void> {
       selector: !playing,
       start:    k === "ready" || k === "success" || k === "failure"
              || k === "endless_ready" || k === "endless_gameover",
-      retry:    k === "success" || k === "failure" || k === "endless_gameover",
     });
   }
   syncControls();

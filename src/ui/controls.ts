@@ -4,11 +4,10 @@ import type { GameMode } from "../data/jutsu.js";
 export interface ControlsHandlers {
   onJutsuChange: (mode: GameMode) => void;
   onStart: () => void;
-  onRetry: () => void;
 }
 
 export interface Controls {
-  setEnabled: (opts: { start?: boolean; retry?: boolean; selector?: boolean }) => void;
+  setEnabled: (opts: { start?: boolean; selector?: boolean }) => void;
   destroy: () => void;
 }
 
@@ -39,12 +38,7 @@ export function buildControls(host: HTMLElement, handlers: ControlsHandlers): Co
   startBtn.classList.add("controls__btn", "controls__btn--primary");
   startBtn.disabled = true;
 
-  const retryBtn = document.createElement("button");
-  retryBtn.textContent = "Retry";
-  retryBtn.classList.add("controls__btn");
-  retryBtn.disabled = true;
-
-  host.append(select, startBtn, retryBtn);
+  host.append(select, startBtn);
 
   const onChange = () => {
     const id = select.value;
@@ -54,18 +48,15 @@ export function buildControls(host: HTMLElement, handlers: ControlsHandlers): Co
   };
   select.addEventListener("change", onChange);
   startBtn.addEventListener("click", handlers.onStart);
-  retryBtn.addEventListener("click", handlers.onRetry);
 
   return {
-    setEnabled: ({ start, retry, selector }) => {
+    setEnabled: ({ start, selector }) => {
       if (start    !== undefined) startBtn.disabled = !start;
-      if (retry    !== undefined) retryBtn.disabled = !retry;
       if (selector !== undefined) select.disabled   = !selector;
     },
     destroy: () => {
       select.removeEventListener("change", onChange);
       startBtn.removeEventListener("click", handlers.onStart);
-      retryBtn.removeEventListener("click", handlers.onRetry);
       host.innerHTML = "";
     },
   };
