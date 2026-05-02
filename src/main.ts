@@ -24,7 +24,7 @@ import { buildResultOverlay } from "./ui/result.js";
 import { buildFlash } from "./ui/flash.js";
 import { SfxPlayer, JUTSU_SFX } from "./audio/sfx.js";
 
-ort.env.wasm.wasmPaths = "/assets/wasm/";
+ort.env.wasm.wasmPaths = "/ort/";
 ort.env.wasm.numThreads = 1;
 
 let state: GameState = initialState;

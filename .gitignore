@@ -1,3 +1,4 @@
 node_modules/
 dist/
-public/models/
+public/ort/
+public/assets/mp-vision-wasm/

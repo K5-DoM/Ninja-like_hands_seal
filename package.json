@@ -6,6 +6,7 @@
   "scripts": {
     "setup": "node scripts/setup.js",
     "dev": "vite",
+    "prebuild": "node scripts/setup.js",
     "build": "tsc && vite build",
     "preview": "vite preview",
     "test": "vitest run",
