@@ -103,7 +103,7 @@ export class Renderer {
   }
 }
 
-function deriveBottomInput(
+export function deriveBottomInput(
   state: GameState,
   challenge: AnyChallenge | null,
   nowSec: number,
@@ -114,11 +114,7 @@ function deriveBottomInput(
   let perSealTimeoutSec = PER_SEAL_TIMEOUT_SEC;
   let isWarning = false;
 
-  if (phase.kind === "idle") {
-    text = "Choose your jutsu and press Start";
-  } else if (phase.kind === "ready") {
-    text = "Press Start to begin";
-  } else if (phase.kind === "running" && challenge) {
+  if (phase.kind === "running" && challenge) {
     perSealTimeoutSec = challenge.perSealTimeoutSec;
     remainingSec = challenge.remainingSec(nowSec);
     isWarning = remainingSec < 1.0;
@@ -127,8 +123,6 @@ function deriveBottomInput(
     text = displayName(phase.jutsu);
   } else if (phase.kind === "failure") {
     text = "";  // flash（DOM）がメッセージを担当
-  } else if (phase.kind === "endless_ready") {
-    text = "Press Start to begin Endless";
   } else if (phase.kind === "endless_running" && challenge) {
     perSealTimeoutSec = challenge.perSealTimeoutSec;
     remainingSec = challenge.remainingSec(nowSec);
