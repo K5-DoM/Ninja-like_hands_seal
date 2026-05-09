@@ -15,18 +15,19 @@ export const ACCEPT_REJECT_THRESHOLD_BY_LABEL: Record<string, number> = {
   "05": 0.90,
   "11": 0.90,
   // easy to recognise
-  "07": 0.80,
+  
   "10": 0.80,
   
   // slightly easy
+  "07": 0.70,
   "09": 0.70,
   "12": 0.70,
   // slightly difficult
   "08": 0.60,
   "01": 0.60,
   "04": 0.60,
+  "06": 0.60,
   // difficult
-  "06": 0.50,
 };
 
 // TemporalSmoother parameters (matches infer_webcam_rgb.py CLI defaults)
