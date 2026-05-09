@@ -46,11 +46,13 @@ async function run(): Promise<void> {
   const chakraCanvas  = document.getElementById("chakra") as HTMLCanvasElement;
   const ctrlHost      = document.getElementById("controls") as HTMLDivElement;
 
-  const descEl    = document.getElementById("overlay__desc")    as HTMLParagraphElement;
-  const loadingEl = document.getElementById("overlay__loading") as HTMLDivElement;
+  const descEl       = document.getElementById("overlay__desc")       as HTMLParagraphElement;
+  const poseGuideEl  = document.getElementById("overlay__pose-guide") as HTMLDivElement;
+  const loadingEl    = document.getElementById("overlay__loading")    as HTMLDivElement;
 
   startBtn.style.display = "none";
   descEl.style.display = "none";
+  poseGuideEl.style.display = "none";
   loadingEl.classList.remove("hidden");
   errEl.textContent = "";
 
@@ -58,6 +60,7 @@ async function run(): Promise<void> {
     loadingEl.classList.add("hidden");
     startBtn.style.display = "";
     descEl.style.display = "";
+    poseGuideEl.style.display = "";
     startBtn.disabled = false;
     startBtn.textContent = "Start Camera";
   };

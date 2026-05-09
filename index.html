@@ -101,6 +101,7 @@
     #overlay.hidden { opacity: 0; pointer-events: none; }
     #overlay__inner {
       text-align: center;
+      width: min(960px, 100%);
       padding: max(24px, env(safe-area-inset-top)) 24px max(24px, env(safe-area-inset-bottom));
     }
     #feedback {
@@ -134,9 +135,98 @@
     #overlay h1 {
       font-size: 22px; letter-spacing: 2px;
       color: #FF6600; text-shadow: 0 0 12px rgba(255,102,0,0.6);
-      margin-bottom: 14px;
+      margin-bottom: 12px;
     }
     #overlay p { font-size: 14px; line-height: 1.6; color: #ddd; margin-bottom: 16px; }
+    #overlay__desc {
+      max-width: 700px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+    #overlay__pose-guide {
+      width: min(640px, calc(100vw - 48px));
+      margin: 0 auto 16px;
+    }
+    .overlay__pose-title {
+      margin-bottom: 10px;
+      color: #fff;
+      font-size: 15px;
+      font-weight: 800;
+      letter-spacing: 0.6px;
+    }
+    .overlay__pose-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+    }
+    .overlay__pose-card {
+      position: relative;
+      overflow: hidden;
+      min-height: 0;
+      aspect-ratio: 4 / 3;
+      border: 1px solid rgba(255,255,255,0.22);
+      border-radius: 8px;
+      background: #171717;
+    }
+    .overlay__pose-card--false {
+      border-color: rgba(255,110,110,0.55);
+    }
+    .overlay__pose-card--correct {
+      border-color: rgba(170,255,90,0.55);
+    }
+    .overlay__pose-card img {
+      width: 100%;
+      height: 100%;
+      display: block;
+      object-fit: cover;
+    }
+    .overlay__pose-card::after {
+      content: "";
+      position: absolute;
+      inset: auto 0 0;
+      height: 42%;
+      background: linear-gradient(180deg, transparent, rgba(0,0,0,0.82));
+      pointer-events: none;
+    }
+    .overlay__pose-label {
+      position: absolute;
+      left: 10px;
+      right: 10px;
+      bottom: 8px;
+      z-index: 1;
+      color: #fff;
+      font-size: 13px;
+      font-weight: 800;
+      line-height: 1.25;
+      text-align: left;
+      text-shadow: 0 2px 8px rgba(0,0,0,0.85);
+    }
+    .overlay__pose-mark {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      z-index: 1;
+      width: 44px;
+      height: 44px;
+      filter: drop-shadow(0 2px 8px rgba(0,0,0,0.8));
+    }
+    .overlay__pose-mark--circle {
+      border: 5px solid #fff;
+      border-radius: 50%;
+    }
+    .overlay__pose-mark--cross::before,
+    .overlay__pose-mark--cross::after {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 19px;
+      width: 6px;
+      height: 44px;
+      border-radius: 999px;
+      background: #fff;
+    }
+    .overlay__pose-mark--cross::before { transform: rotate(45deg); }
+    .overlay__pose-mark--cross::after { transform: rotate(-45deg); }
     #start {
       padding: 12px 36px; font: inherit; font-weight: 700;
       background: #AAFF5A; color: #0d0d0d;
@@ -160,6 +250,58 @@
       font-size: 14px; letter-spacing: 2px; color: #fff;
     }
     #overlay__loading.hidden { display: none; }
+    @media (max-width: 640px), (max-aspect-ratio: 3/4) {
+      #overlay {
+        align-items: flex-start;
+        overflow-y: auto;
+      }
+      #overlay__inner {
+        padding-left: max(16px, env(safe-area-inset-left));
+        padding-right: max(16px, env(safe-area-inset-right));
+      }
+      #overlay h1 {
+        font-size: 18px;
+        letter-spacing: 1.5px;
+        margin-bottom: 10px;
+      }
+      #overlay p {
+        font-size: 13px;
+        line-height: 1.5;
+        margin-bottom: 12px;
+      }
+      #overlay__pose-guide {
+        width: min(360px, 100%);
+        margin-bottom: 14px;
+      }
+      .overlay__pose-title {
+        font-size: 14px;
+      }
+      .overlay__pose-grid {
+        grid-template-columns: 1fr;
+        gap: 8px;
+      }
+      .overlay__pose-card {
+        aspect-ratio: 16 / 9;
+      }
+      .overlay__pose-card--correct { order: -1; }
+      .overlay__pose-mark {
+        width: 36px;
+        height: 36px;
+      }
+      .overlay__pose-mark--circle {
+        border-width: 4px;
+      }
+      .overlay__pose-mark--cross::before,
+      .overlay__pose-mark--cross::after {
+        left: 16px;
+        width: 5px;
+        height: 36px;
+      }
+      #start {
+        width: min(280px, 100%);
+        min-height: 44px;
+      }
+    }
 
     #flash {
       position: fixed;
@@ -253,6 +395,21 @@
   <div id="overlay">
     <div id="overlay__inner">
       <h1>NINJA-like HANDS SEAL</h1>
+      <div id="overlay__pose-guide" aria-label="Hand position guide">
+        <div class="overlay__pose-title">Keep your hand seal at chest height</div>
+        <div class="overlay__pose-grid">
+          <figure class="overlay__pose-card overlay__pose-card--false" aria-label="Incorrect hand position">
+            <img src="/assets/effects/mouse_hands_false.png" alt="Hands held too close to your face" />
+            <span class="overlay__pose-mark overlay__pose-mark--cross" aria-hidden="true"></span>
+            <figcaption class="overlay__pose-label">Too close to face</figcaption>
+          </figure>
+          <figure class="overlay__pose-card overlay__pose-card--correct" aria-label="Correct hand position">
+            <img src="/assets/effects/chest_hands_correct.png" alt="Hands held at chest height" />
+            <span class="overlay__pose-mark overlay__pose-mark--circle" aria-hidden="true"></span>
+            <figcaption class="overlay__pose-label">Chest-height pose</figcaption>
+          </figure>
+        </div>
+      </div>
       <p id="overlay__desc">
         Hand-seal recognition runs entirely in your browser.No video is uploaded.<br/>
         Please keep your distance from the camera and make a hand seal at your chest.<br/>
